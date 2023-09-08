@@ -24,7 +24,8 @@ target_link_libraries(
 
 add_executable(
     mbgl-render
-    ${PROJECT_SOURCE_DIR}/bin/render.cpp
+    ${PROJECT_SOURCE_DIR}/bin/interface-basictiles.cpp
+    ${PROJECT_SOURCE_DIR}/bin/main.cpp
 )
 
 target_link_libraries(
