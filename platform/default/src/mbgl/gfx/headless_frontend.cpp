@@ -7,7 +7,8 @@
 #include <mbgl/renderer/renderer_state.hpp>
 #include <mbgl/renderer/update_parameters.hpp>
 #include <mbgl/util/monotonic_timer.hpp>
-#include <mbgl/util/run_loop.hpp>
+// #include <mbgl/util/run_loop.hpp>
+#include <iostream>
 
 namespace mbgl {
 
@@ -39,7 +40,19 @@ HeadlessFrontend::HeadlessFrontend(Size size_,
               // MLNRenderFrontend#update which overwrites `updateParameters`.
               // Copy the shared pointer here so that the parameters aren't
               // destroyed while `render(...)` is still using them.
-              auto updateParameters_ = updateParameters;
+              std::shared_ptr<mbgl::UpdateParameters> updateParameters_;
+              {
+                // Lock on the parameters
+                std::lock_guard<std::mutex> lock(m_updateMutex);
+
+                // UpdateParameters should always be available when rendering.
+                assert(updateParameters);
+
+                // Hold on to the update parameters during render
+                updateParameters_ = updateParameters;
+              }
+              
+              //   auto updateParameters_ = updateParameters;
               renderer->render(updateParameters_);
 
               auto endTime = mbgl::util::MonotonicTimer::now();
@@ -56,7 +69,11 @@ void HeadlessFrontend::reset() {
 }
 
 void HeadlessFrontend::update(std::shared_ptr<UpdateParameters> updateParameters_) {
-    updateParameters = updateParameters_;
+    {
+        std::lock_guard<std::mutex> lock(m_updateMutex);
+        updateParameters = updateParameters_;
+    }
+    
     asyncInvalidate.send();
 }
 
@@ -156,6 +173,36 @@ HeadlessFrontend::RenderResult HeadlessFrontend::render(Map& map) {
 
     while (!result.image.valid() && !error) {
         util::RunLoop::Get()->runOnce();
+    }
+
+    if (error) {
+        std::rethrow_exception(error);
+    }
+
+    return result;
+}
+
+HeadlessFrontend::RenderResult HeadlessFrontend::renderInLoop(Map& map, util::RunLoop& loop)
+{
+    HeadlessFrontend::RenderResult result;
+    std::exception_ptr error;
+    gfx::BackendScope guard{*getBackend()};
+
+    map.renderStill([&](const std::exception_ptr& e) {
+
+      std::thread::id threadID = std::this_thread::get_id ();
+      std::cout << "renderStill callback Thread ID: " << threadID << std::endl;
+
+        if (e) {
+            error = e;
+        } else {
+            result.image = backend->readStillImage();
+            result.stats = getBackend()->getContext().renderingStats();
+        }
+    });
+
+    while (!result.image.valid() && !error) {
+        loop.runOnce();
     }
 
     if (error) {

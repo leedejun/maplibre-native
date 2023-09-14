@@ -7,6 +7,7 @@
 #include <string>
 #include "httplib.h"
 #include "interface-basictiles.hpp"
+#include "renderThread.hpp"
 
 using namespace std;
 using namespace httplib;
@@ -52,7 +53,11 @@ bool findSuffix(const std::string& src, const std::string& suffix)
 
 int main(int argc, char * argv[])
 {
+  renderThread::instance();
   std::cout << " server step0" << std::endl;
+  // svr.set_read_timeout (5, 0); // 5 seconds
+  // svr.set_write_timeout (5, 0); // 5 seconds
+
   // Set a route for /fonts
   ///e.g. /fonts/Roboto Regular/0-255.pbf
   svr.Get(R"(/fonts/([\w\s\-_]+)/([\d]+-[\d]+)\.pbf)", [&](const httplib::Request& req, httplib::Response& res) {
@@ -137,8 +142,18 @@ int main(int argc, char * argv[])
   // svr.set_file_extension_and_mimetype_mapping("avi", "video/x-msvideo");
   // svr.set_mount_point("/data", "./data"); 
 
-  svr.Get("/styles/basic", interface_basictiles());
+//  interface_basictiles basictiles;
+  
+  // svr.Get("/styles/basic", [&](const Request& req, Response& res) { basictiles(req, res); });
+  // svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", [&](const Request& req, Response& res) { basictiles(req, res); });
+  svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", interface_basictiles());
+
+  // svr.Get("/styles/basic", interface_basictiles());
   svr.Get("/stop", [&](const Request& req, Response& res) { svr.stop(); });
+  
+   // Run servers
+  // auto httpThread = std::thread([&]() { svr.listen(ipAddress.c_str(), atoi(port.c_str())); });
+  // httpThread.join();
   svr.listen(ipAddress.c_str(), atoi(port.c_str()));
   std::cout << " server step10" << std::endl;
   return 1;

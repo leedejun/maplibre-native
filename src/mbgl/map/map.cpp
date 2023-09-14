@@ -22,6 +22,7 @@
 #include <mbgl/util/tile_coordinate.hpp>
 
 #include <utility>
+#include <iostream>
 
 namespace mbgl {
 
@@ -136,6 +137,8 @@ CameraOptions Map::getCameraOptions(const std::optional<EdgeInsets>& padding) co
 }
 
 void Map::jumpTo(const CameraOptions& camera) {
+    std::thread::id threadID = std::this_thread::get_id ();
+    std::cout << "Map::jumpTo Thread ID: " << threadID << std::endl;
     impl->jumpTo(camera);
 }
 

@@ -22,11 +22,32 @@ target_link_libraries(
     PRIVATE Mapbox::Base::Extras::args mbgl-compiler-options mbgl-core
 )
 
+if(WIN32)
+    find_package(LIBUV REQUIRED)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(LIBUV libuv REQUIRED)
+endif()
+
 add_executable(
     mbgl-render
     ${PROJECT_SOURCE_DIR}/bin/interface-basictiles.cpp
+    ${PROJECT_SOURCE_DIR}/bin/ut_thread_pool.cpp
     ${PROJECT_SOURCE_DIR}/bin/main.cpp
+    ${PROJECT_SOURCE_DIR}/bin/renderThread.cpp
 )
+
+# target_include_directories(
+#     mbgl-render
+#     PRIVATE
+#         ${LIBUV_INCLUDE_DIRS}
+# )
+
+# target_link_libraries(
+#     mbgl-render
+#     PRIVATE Mapbox::Base::Extras::args mbgl-compiler-options mbgl-core 
+#     ${LIBUV_LIBRARIES}
+# )
 
 target_link_libraries(
     mbgl-render

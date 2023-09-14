@@ -21,8 +21,8 @@
             "url": "mbtiles:///opt/SZHZC/work/maplibre-native/data/lgfyh.mbtiles"
         }
     },
-    "sprite": "192.168.3.19:8080/sprites/sprite",
-    "glyphs": "asset:///opt/SZHZC/work/maplibre-native/data/fonts/{fontstack}/{range}.pbf",
+    "sprite": "file://./data/sprites/sprite",
+    "glyphs": "file://./data/fonts/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "background",

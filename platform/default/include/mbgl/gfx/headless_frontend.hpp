@@ -9,6 +9,8 @@
 #include <atomic>
 #include <memory>
 #include <optional>
+#include <mutex>
+#include <mbgl/util/run_loop.hpp>
 
 namespace mbgl {
 
@@ -57,6 +59,8 @@ public:
     RenderResult render(Map&);
     void renderOnce(Map&);
 
+    RenderResult renderInLoop(Map& map, util::RunLoop& loop);
+
     std::optional<TransformState> getTransformState() const;
 
 private:
@@ -69,6 +73,8 @@ private:
 
     std::unique_ptr<Renderer> renderer;
     std::shared_ptr<UpdateParameters> updateParameters;
+
+    std::mutex m_updateMutex;
 };
 
 } // namespace mbgl
