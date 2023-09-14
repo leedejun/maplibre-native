@@ -54,9 +54,8 @@ bool findSuffix(const std::string& src, const std::string& suffix)
 int main(int argc, char * argv[])
 {
   renderThread::instance();
+  // renderThread::instance()->prepareBasicMap();
   std::cout << " server step0" << std::endl;
-  // svr.set_read_timeout (5, 0); // 5 seconds
-  // svr.set_write_timeout (5, 0); // 5 seconds
 
   // Set a route for /fonts
   ///e.g. /fonts/Roboto Regular/0-255.pbf
@@ -133,22 +132,10 @@ int main(int argc, char * argv[])
     }
   });
 
-  // svr.set_file_extension_and_mimetype_mapping("cc", "text/x-c");
-  // svr.set_file_extension_and_mimetype_mapping("cpp", "text/x-c");
-  // svr.set_file_extension_and_mimetype_mapping("hh", "text/x-h");
-  // svr.set_file_extension_and_mimetype_mapping("h", "text/x-h");
-  // svr.set_file_extension_and_mimetype_mapping("mp3", "audio/mpeg");
-  // svr.set_file_extension_and_mimetype_mapping("mp4", "video/mpeg");
-  // svr.set_file_extension_and_mimetype_mapping("avi", "video/x-msvideo");
-  // svr.set_mount_point("/data", "./data"); 
-
-//  interface_basictiles basictiles;
-  
+  // interface_basictiles basictiles;
   // svr.Get("/styles/basic", [&](const Request& req, Response& res) { basictiles(req, res); });
   // svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", [&](const Request& req, Response& res) { basictiles(req, res); });
   svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", interface_basictiles());
-
-  // svr.Get("/styles/basic", interface_basictiles());
   svr.Get("/stop", [&](const Request& req, Response& res) { svr.stop(); });
   
    // Run servers

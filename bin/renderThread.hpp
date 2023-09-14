@@ -2,6 +2,9 @@
 #include <functional>
 #include <mbgl/util/run_loop.hpp>
 #include "ut_thread_pool.h"
+#include <mbgl/map/map.hpp>
+#include <mbgl/gfx/headless_frontend.hpp>
+#include <atomic>
 
 
 using namespace mbgl;
@@ -14,7 +17,9 @@ public:
     renderThread(/* args */);
     ~renderThread();
     static renderThread* instance();
-
+    void prepareBasicMap();
+    bool isBasicMapReady();
+    std::string renderBasicMap(double zoom, double lon, double lat);
     /**
      * @brief 提交任务给线程池
      * @tparam F     函数类型
@@ -34,9 +39,12 @@ public:
 
 private:
     UTThreadPool* m_threadPool = nullptr;
-
     static renderThread* m_instance;
 
+    //basic map
+    Map* m_basicMap = nullptr;
+    HeadlessFrontend* m_basicFrontend = nullptr;
+    std::atomic_bool m_basicMapReady = false;
 };
 
 /**

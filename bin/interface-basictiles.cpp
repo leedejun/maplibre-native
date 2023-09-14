@@ -208,8 +208,8 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
   const double pitch =  0;
   const double pixelRatio =  1.0;
 
-  const uint32_t width =  512;
-  const uint32_t height =  512;
+  const uint32_t width =  513;
+  const uint32_t height =  513;
   const std::string output = "out.png";
   const std::string cache_file = "cache.sqlite";
   const std::string asset_root = ".";
@@ -345,7 +345,7 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
                       .withMapMode(MapMode::Static)
                       .withSize(frontend.getSize())
                       .withPixelRatio(static_cast<float>(pixelRatio))
-                      .withCrossSourceCollisions(true),
+                      .withCrossSourceCollisions(false),
                   ResourceOptions()
                       .withCachePath(cache_file)
                       .withAssetPath(asset_root)
