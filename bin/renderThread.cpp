@@ -148,10 +148,7 @@ void renderThread::prepareBasicMap()
         basicStyle = std::string("file://") + basicStyle;
     }
     m_basicMap->getStyle().loadURL(basicStyle);
-    std::thread::id threadID = std::this_thread::get_id ();
-    std::cout << "prepareBasicMap Thread ID: " << threadID << std::endl;
     m_basicMapReady.store(true);
-    std::cout << "prepareBasicMap m_basicMapReady: " << m_basicMapReady << std::endl;
 }
 
 bool renderThread::isBasicMapReady()
@@ -164,20 +161,14 @@ std::string renderThread::renderBasicMap(double zoom, double lon, double lat)
     std::string str="";
     std::future<std::string> resFuture = renderThread::instance()->Enqueue(
     [&,this,&str]() {
-        util::RunLoop loop(util::RunLoop::Type::New);
+        static util::RunLoop loop(util::RunLoop::Type::New);
         std::thread::id threadID = std::this_thread::get_id ();
-        std::cout << "renderBasicMap Thread ID: " << threadID << std::endl;
         prepareBasicMap();
         if (m_basicMap && m_basicFrontend)
         {
             m_basicMap->jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
-
-            std::cout << "after jumpTo , renderBasicMap Thread ID: " << threadID << std::endl;
             str = encodePNG(m_basicFrontend->renderInLoop(*m_basicMap, loop).image);
-            // str = encodePNG(m_basicFrontend->render(*m_basicMap).image);
         }
-
-        std::cout << "str: " << str << std::endl;
         return str;
     }
     );

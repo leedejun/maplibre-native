@@ -54,7 +54,6 @@ bool findSuffix(const std::string& src, const std::string& suffix)
 int main(int argc, char * argv[])
 {
   renderThread::instance();
-  // renderThread::instance()->prepareBasicMap();
   std::cout << " server step0" << std::endl;
 
   // Set a route for /fonts

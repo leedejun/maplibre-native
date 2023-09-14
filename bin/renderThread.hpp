@@ -17,7 +17,6 @@ public:
     renderThread(/* args */);
     ~renderThread();
     static renderThread* instance();
-    void prepareBasicMap();
     bool isBasicMapReady();
     std::string renderBasicMap(double zoom, double lon, double lat);
     /**
@@ -38,6 +37,8 @@ public:
     >;
 
 private:
+    void prepareBasicMap();
+
     UTThreadPool* m_threadPool = nullptr;
     static renderThread* m_instance;
 

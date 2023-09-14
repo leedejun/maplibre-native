@@ -331,49 +331,80 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
       //     res.status = 200;
       //     res.set_content(str, "image/png");
       // }
-      std::string str="";
-      std::future<std::string> resFuture = renderThread::instance()->Enqueue(
-        [=,&str]() {
-          auto mapTilerConfiguration = mbgl::TileServerOptions::MapTilerConfiguration();
-          util::RunLoop loop(util::RunLoop::Type::New);
-          HeadlessFrontend frontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
-                            gfx::ContextMode::Unique);
 
-          Map map(frontend,
-                  MapObserver::nullObserver(),
-                  MapOptions()
-                      .withMapMode(MapMode::Static)
-                      .withSize(frontend.getSize())
-                      .withPixelRatio(static_cast<float>(pixelRatio))
-                      .withCrossSourceCollisions(false),
-                  ResourceOptions()
-                      .withCachePath(cache_file)
-                      .withAssetPath(asset_root)
-                      .withApiKey(apikey)
-                      .withTileServerOptions(mapTilerConfiguration));
+      //////////////////////////////////////////////////////////////////////////////////////////ok
+      // std::string str="";
+      // std::future<std::string> resFuture = renderThread::instance()->Enqueue(
+      //   [=,&str]() {
+      //     auto mapTilerConfiguration = mbgl::TileServerOptions::MapTilerConfiguration();
+      //     static util::RunLoop loop(util::RunLoop::Type::New);
+      //     if (!g_map && !g_frontend)
+      //     {
+      //         g_frontend = new HeadlessFrontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
+      //                         gfx::ContextMode::Unique);
 
-            //set style
-          std::string basicStyle = "./data/styles/basic.json";
-          if (basicStyle.find("://") == std::string::npos) {
-          basicStyle = std::string("file://") + basicStyle;
-          }
-          map.getStyle().loadURL(basicStyle);
-          std::thread::id threadID = std::this_thread::get_id ();
-          std::cout << "http get Thread ID: " << threadID << std::endl;
-          map.jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
-          // map.jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom).withBearing(bearing).withPitch(pitch));
-          str = encodePNG(frontend.renderInLoop(map, loop).image);
-          return str;
-        }
-      );
+      //         g_map = new Map(*g_frontend,
+      //                 MapObserver::nullObserver(),
+      //                 MapOptions()
+      //                     .withMapMode(MapMode::Static)
+      //                     .withSize(g_frontend->getSize())
+      //                     .withPixelRatio(static_cast<float>(pixelRatio))
+      //                     .withCrossSourceCollisions(false),
+      //                 ResourceOptions()
+      //                     .withCachePath(cache_file)
+      //                     .withAssetPath(asset_root)
+      //                     .withApiKey(apikey)
+      //                     .withTileServerOptions(mapTilerConfiguration));
 
-      while(str=="")
-      {
-        resFuture.wait();
-      }
-      // std::cout << "str: " << str << std::endl;
+      //           //set style
+      //         std::string basicStyle = "./data/styles/basic.json";
+      //         if (basicStyle.find("://") == std::string::npos) {
+      //         basicStyle = std::string("file://") + basicStyle;
+      //         }
+      //         g_map->getStyle().loadURL(basicStyle);
+      //     }
+          
+
+      //     // HeadlessFrontend frontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
+      //     //                   gfx::ContextMode::Unique);
+
+      //     // Map map(frontend,
+      //     //         MapObserver::nullObserver(),
+      //     //         MapOptions()
+      //     //             .withMapMode(MapMode::Static)
+      //     //             .withSize(frontend.getSize())
+      //     //             .withPixelRatio(static_cast<float>(pixelRatio))
+      //     //             .withCrossSourceCollisions(false),
+      //     //         ResourceOptions()
+      //     //             .withCachePath(cache_file)
+      //     //             .withAssetPath(asset_root)
+      //     //             .withApiKey(apikey)
+      //     //             .withTileServerOptions(mapTilerConfiguration));
+
+      //     //   //set style
+      //     // std::string basicStyle = "./data/styles/basic.json";
+      //     // if (basicStyle.find("://") == std::string::npos) {
+      //     // basicStyle = std::string("file://") + basicStyle;
+      //     // }
+      //     // map.getStyle().loadURL(basicStyle);
+
+      //     std::thread::id threadID = std::this_thread::get_id ();
+      //     std::cout << "http get Thread ID: " << threadID << std::endl;
+      //     g_map->jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
+      //     // map.jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom).withBearing(bearing).withPitch(pitch));
+      //     str = encodePNG(g_frontend->renderInLoop(*g_map, loop).image);
+      //     return str;
+      //   }
+      // );
+
+      // while(str=="")
+      // {
+      //   resFuture.wait();
+      // }
+      /////////////////////////////////////////////////////////////////////////////ok
+      std::string strPng = renderThread::instance()->renderBasicMap(zoom,lon,lat);
       res.status = 200;
-      res.set_content(str, "image/png");
+      res.set_content(strPng, "image/png");
       // util::RunLoop loop;
       // std::thread::id threadID = std::this_thread::get_id ();
       // std::cout << "Thread ID: " << threadID << std::endl;

@@ -189,10 +189,6 @@ HeadlessFrontend::RenderResult HeadlessFrontend::renderInLoop(Map& map, util::Ru
     gfx::BackendScope guard{*getBackend()};
 
     map.renderStill([&](const std::exception_ptr& e) {
-
-      std::thread::id threadID = std::this_thread::get_id ();
-      std::cout << "renderStill callback Thread ID: " << threadID << std::endl;
-
         if (e) {
             error = e;
         } else {
