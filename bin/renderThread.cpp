@@ -131,7 +131,7 @@ void renderThread::prepareBasicMap()
         m_basicMap = new Map(*m_basicFrontend,
             MapObserver::nullObserver(),
             MapOptions()
-                .withMapMode(MapMode::Static)
+                .withMapMode(MapMode::Tile)
                 .withSize(m_basicFrontend->getSize())
                 .withPixelRatio(static_cast<float>(pixelRatio))
                 .withCrossSourceCollisions(true),

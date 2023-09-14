@@ -208,8 +208,8 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
   const double pitch =  0;
   const double pixelRatio =  1.0;
 
-  const uint32_t width =  513;
-  const uint32_t height =  513;
+  const uint32_t width =  512;
+  const uint32_t height =  512;
   const std::string output = "out.png";
   const std::string cache_file = "cache.sqlite";
   const std::string asset_root = ".";
