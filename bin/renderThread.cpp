@@ -9,7 +9,10 @@ renderThread* renderThread::m_instance = nullptr;
 renderThread::renderThread(/* args */)
 {
     m_threadPool = new UTThreadPool(1);
-    m_basicMapReady = false;
+    m_map = nullptr;
+    m_frontend = nullptr;
+    m_mapReady = false;
+    m_styleName = "basic";
 }
 
 renderThread::~renderThread()
@@ -19,6 +22,19 @@ renderThread::~renderThread()
         delete m_threadPool;
         m_threadPool = nullptr;
     }
+
+    if (m_map)
+    {
+        delete m_map;
+        m_map = nullptr;
+    }
+
+    if (m_frontend)
+    {
+        delete m_frontend;
+        m_frontend = nullptr;
+    }
+    
 }
 
 renderThread* renderThread::instance()
@@ -31,7 +47,7 @@ renderThread* renderThread::instance()
     return m_instance;
 }
 
-void renderThread::prepareBasicMap()
+void renderThread::prepareMap(std::string styleName)
 {
     // const double bearing =  0;
     // const double pitch =  0;
@@ -54,19 +70,19 @@ void renderThread::prepareBasicMap()
     //         {
     //             util::RunLoop loop;
     //             auto mapTilerConfiguration = mbgl::TileServerOptions::MapTilerConfiguration();
-    //             if (!m_basicFrontend)
+    //             if (!m_frontend)
     //             {
-    //                 m_basicFrontend = new HeadlessFrontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
+    //                 m_frontend = new HeadlessFrontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
     //                                 gfx::ContextMode::Unique);
     //             }
 
-    //             if (!m_basicMap)
+    //             if (!m_map)
     //             {
-    //                 m_basicMap = new Map(*m_basicFrontend,
+    //                 m_map = new Map(*m_frontend,
     //                     MapObserver::nullObserver(),
     //                     MapOptions()
     //                         .withMapMode(MapMode::Static)
-    //                         .withSize(m_basicFrontend->getSize())
+    //                         .withSize(m_frontend->getSize())
     //                         .withPixelRatio(static_cast<float>(pixelRatio))
     //                         .withCrossSourceCollisions(true),
     //                         ResourceOptions()
@@ -81,29 +97,31 @@ void renderThread::prepareBasicMap()
     //             if (basicStyle.find("://") == std::string::npos) {
     //                 basicStyle = std::string("file://") + basicStyle;
     //             }
-    //             m_basicMap->getStyle().loadURL(basicStyle);
+    //             m_map->getStyle().loadURL(basicStyle);
     //             std::thread::id threadID = std::this_thread::get_id ();
     //             std::cout << "prepareBasicMap Thread ID: " << threadID << std::endl;
-    //             m_basicMapReady.store(true);
-    //             std::cout << "prepareBasicMap m_basicMapReady: " << m_basicMapReady << std::endl;
+    //             m_mapReady.store(true);
+    //             std::cout << "prepareBasicMap m_mapReady: " << m_mapReady << std::endl;
     //             return true;
     //         }
     //     );
 
-    //     while (!m_basicMapReady.load())
+    //     while (!m_mapReady.load())
     //     {
-    //         std::cout << "while prepareBasicMap m_basicMapReady: " << m_basicMapReady << std::endl;
+    //         std::cout << "while prepareBasicMap m_mapReady: " << m_mapReady << std::endl;
     //         resFuture.wait();
     //     }
 
-    //     std::cout << "after while prepareBasicMap m_basicMapReady: " << m_basicMapReady << std::endl;
+    //     std::cout << "after while prepareBasicMap m_mapReady: " << m_mapReady << std::endl;
     // }
 
-    if(m_basicMapReady.load())
+    if(m_mapReady.load() && m_styleName ==styleName)
     {
         return;
     }
 
+    m_mapReady.store(false);
+    m_styleName = styleName;
     const double bearing =  0;
     const double pitch =  0;
     const double pixelRatio =  1.0;
@@ -120,19 +138,19 @@ void renderThread::prepareBasicMap()
 
     // util::RunLoop loop;
     auto mapTilerConfiguration = mbgl::TileServerOptions::MapTilerConfiguration();
-    if (!m_basicFrontend)
+    if (!m_frontend)
     {
-        m_basicFrontend = new HeadlessFrontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
+        m_frontend = new HeadlessFrontend({width, height}, static_cast<float>(pixelRatio), gfx::HeadlessBackend::SwapBehaviour::NoFlush,
                         gfx::ContextMode::Unique);
     }
 
-    if (!m_basicMap)
+    if (!m_map)
     {
-        m_basicMap = new Map(*m_basicFrontend,
+        m_map = new Map(*m_frontend,
             MapObserver::nullObserver(),
             MapOptions()
                 .withMapMode(MapMode::Tile)
-                .withSize(m_basicFrontend->getSize())
+                .withSize(m_frontend->getSize())
                 .withPixelRatio(static_cast<float>(pixelRatio))
                 .withCrossSourceCollisions(true),
                 ResourceOptions()
@@ -143,31 +161,31 @@ void renderThread::prepareBasicMap()
     }
     
     //set style
-    std::string basicStyle = "./data/styles/basic.json";
-    if (basicStyle.find("://") == std::string::npos) {
-        basicStyle = std::string("file://") + basicStyle;
+    std::string stylePath = std::string("./data/styles/")+ m_styleName + ".json";
+    if (stylePath.find("://") == std::string::npos) {
+        stylePath = std::string("file://") + stylePath;
     }
-    m_basicMap->getStyle().loadURL(basicStyle);
-    m_basicMapReady.store(true);
+    m_map->getStyle().loadURL(stylePath);
+    m_mapReady.store(true);
 }
 
-bool renderThread::isBasicMapReady()
+bool renderThread::isMapReady()
 {
-    return m_basicMapReady.load();
+    return m_mapReady.load();
 }
 
-std::string renderThread::renderBasicMap(double zoom, double lon, double lat)
+std::string renderThread::renderMap(const std::string& styleName, double zoom, double lon, double lat)
 {
     std::string str="";
+    std::string style = styleName;
     std::future<std::string> resFuture = renderThread::instance()->Enqueue(
     [&,this,&str]() {
         static util::RunLoop loop(util::RunLoop::Type::New);
-        std::thread::id threadID = std::this_thread::get_id ();
-        prepareBasicMap();
-        if (m_basicMap && m_basicFrontend)
+        prepareMap(style);
+        if (m_map && m_frontend)
         {
-            m_basicMap->jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
-            str = encodePNG(m_basicFrontend->renderInLoop(*m_basicMap, loop).image);
+            m_map->jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
+            str = encodePNG(m_frontend->renderInLoop(*m_map, loop).image);
         }
         return str;
     }

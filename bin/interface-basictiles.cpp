@@ -155,7 +155,7 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
 {
 
   // 获取请求参数
-  if (req.matches.size()<4)
+  if (req.matches.size()<5)
   {
     return;
   }
@@ -165,12 +165,13 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
   int z =0;
   
   std::string fullPath = req.matches[0];
-  std::string strZ = req.matches[1];
+  std::string strStyle = req.matches[1];
+  std::string strZ = req.matches[2];
   z = std::stoi(strZ);
-  std::string strX = req.matches[2];
+  std::string strX = req.matches[3];
   x = std::stoi(strX);
   
-  std::string strY = req.matches[3];
+  std::string strY = req.matches[4];
   y = std::stoi(strY);
 
   std::cout << " z=" << z << std::endl;
@@ -402,7 +403,7 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
       //   resFuture.wait();
       // }
       /////////////////////////////////////////////////////////////////////////////ok
-      std::string strPng = renderThread::instance()->renderBasicMap(zoom,lon,lat);
+      std::string strPng = renderThread::instance()->renderMap(std::move(strStyle), zoom,lon,lat);
       res.status = 200;
       res.set_content(strPng, "image/png");
       // util::RunLoop loop;

@@ -8,6 +8,7 @@
 #include "httplib.h"
 #include "interface-basictiles.hpp"
 #include "renderThread.hpp"
+#include <args.hxx>
 
 using namespace std;
 using namespace httplib;
@@ -51,11 +52,75 @@ bool findSuffix(const std::string& src, const std::string& suffix)
   }
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
+
+  // 创建一个 ArgumentParser 对象
+    args::ArgumentParser parser("This is a test program.", "This goes after the options.");
+    // 创建一个 Group 对象
+    args::Group group(parser, "This group is all exclusive:", args::Group::Validators::All);
+    // 创建一些 ValueFlag 对象
+    args::ValueFlag<std::string> host(group, "host", "The host ip address", {'h', "host"});
+    args::ValueFlag<int> customPort(group, "port", "The port number", {'p', "port"});
+    // 解析命令行参数
+    try
+    {
+        parser.ParseCLI(argc, argv);
+    }
+    catch (args::Help)
+    {
+        std::cout << parser;
+        return 0;
+    }
+    catch (args::ParseError e)
+    {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    }
+    catch (args::ValidationError e)
+    {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    }
+    // // 获取参数的值
+    // if (host) std::cout << "Host: " << args::get(host) << std::endl;
+    // if (port) std::cout << "Port: " << args::get(port) << std::endl;
+    
+    const std::string strHost = host ? args::get(host):ipAddress;
+    const int iPort = customPort ? args::get(customPort) : 8080;
+
+  // args::ArgumentParser argumentParser("Mapbox GL render tool");
+  // args::HelpFlag helpFlag(argumentParser, "help", "Display this help menu", {"help"});
+  // args::ValueFlag<std::string> hostValue(argumentParser, "number", "host ipAddress", {'host', "host"});
+  // args::ValueFlag<uint32_t> portValue(argumentParser, "number", "host port", {'port', "port"});
+
+  // args::ValueFlag<uint32_t> widthValue(argumentParser, "pixels", "Image width", {'w', "width"});
+  // args::ValueFlag<uint32_t> heightValue(argumentParser, "pixels", "Image height", {'h', "height"});
+
+  // try {
+  //     argumentParser.ParseCLI(argc, argv);
+  // } catch (const args::Help&) {
+  //     std::cout << argumentParser;
+  //     exit(0);
+  // } catch (const args::ParseError& e) {
+  //     std::cerr << e.what() << std::endl;
+  //     std::cerr << argumentParser;
+  //     exit(1);
+  // } catch (const args::ValidationError& e) {
+  //     std::cerr << e.what() << std::endl;
+  //     std::cerr << argumentParser;
+  //     exit(2);
+  // }
+
+  // const std::string strHost = hostValue ? args::get(hostValue):ipAddress;
+  // const uint32_t iPort = portValue ? args::get(portValue) : 8080;
+
+
   renderThread::instance();
   std::cout << " server step0" << std::endl;
-
+  try {
   // Set a route for /fonts
   ///e.g. /fonts/Roboto Regular/0-255.pbf
   svr.Get(R"(/fonts/([\w\s\-_]+)/([\d]+-[\d]+)\.pbf)", [&](const httplib::Request& req, httplib::Response& res) {
@@ -134,13 +199,19 @@ int main(int argc, char * argv[])
   // interface_basictiles basictiles;
   // svr.Get("/styles/basic", [&](const Request& req, Response& res) { basictiles(req, res); });
   // svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", [&](const Request& req, Response& res) { basictiles(req, res); });
-  svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", interface_basictiles());
+  // svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", interface_basictiles());
+  svr.Get(R"(/styles/([\w]+)/([\d]+)/([\d]+)/([\d]+)\.png)", interface_basictiles());
   svr.Get("/stop", [&](const Request& req, Response& res) { svr.stop(); });
   
    // Run servers
   // auto httpThread = std::thread([&]() { svr.listen(ipAddress.c_str(), atoi(port.c_str())); });
   // httpThread.join();
-  svr.listen(ipAddress.c_str(), atoi(port.c_str()));
+  // svr.listen(ipAddress.c_str(), atoi(port.c_str()));
+  svr.listen(strHost.c_str(), iPort);
   std::cout << " server step10" << std::endl;
+  } catch (std::exception& e) {
+            std::cout << "Error: " << e.what() << std::endl;
+            exit(1);
+        }
   return 1;
 }

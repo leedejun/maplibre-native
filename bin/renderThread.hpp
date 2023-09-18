@@ -17,8 +17,8 @@ public:
     renderThread(/* args */);
     ~renderThread();
     static renderThread* instance();
-    bool isBasicMapReady();
-    std::string renderBasicMap(double zoom, double lon, double lat);
+    bool isMapReady();
+    std::string renderMap(const std::string& styleName, double zoom, double lon, double lat);
     /**
      * @brief 提交任务给线程池
      * @tparam F     函数类型
@@ -37,15 +37,16 @@ public:
     >;
 
 private:
-    void prepareBasicMap();
+    void prepareMap(std::string styleName);
 
     UTThreadPool* m_threadPool = nullptr;
     static renderThread* m_instance;
 
-    //basic map
-    Map* m_basicMap = nullptr;
-    HeadlessFrontend* m_basicFrontend = nullptr;
-    std::atomic_bool m_basicMapReady = false;
+    //map
+    Map* m_map = nullptr;
+    HeadlessFrontend* m_frontend = nullptr;
+    std::atomic_bool m_mapReady = false;
+    std::string m_styleName;
 };
 
 /**

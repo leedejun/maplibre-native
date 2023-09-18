@@ -18,11 +18,11 @@
     "sources": {
         "openmaptiles": {
             "type": "vector",
-            "url": "mbtiles://{data}"
+            "url": "mbtiles:///opt/SZHZC/work/maplibre-native/data/lgfyh.mbtiles"
         }
     },
-    "sprite": "sprites/sprite",
-    "glyphs": "{fontstack}/{range}.pbf",
+    "sprite": "file://./data/sprites/sprite",
+    "glyphs": "file://./data/fonts/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "background",
