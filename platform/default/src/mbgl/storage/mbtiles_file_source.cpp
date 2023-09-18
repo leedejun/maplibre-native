@@ -20,6 +20,10 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <iostream>
+#include<filesystem>
+
+namespace fs = std::filesystem;
 
 #if defined(__QT__) && (defined(_WIN32) || defined(__EMSCRIPTEN__))
 #include <QtZlib/zlib.h>
@@ -284,7 +288,18 @@ std::unique_ptr<AsyncRequest> MBTilesFileSource::request(const Resource &resourc
         return req;
     }
 
-    if (resource.url.find("://") == std::string::npos ||
+    //添加支持相对路径的mbtiles数据
+    bool isRelative = false;
+    std::string abUrl = "";
+    if (resource.url.find(mbgl::util::MBTILES_PROTOCOL) != std::string::npos &&
+        (!util::is_absolute_path(resource.url.substr(resource.url.find("://") + 3)) ))
+    {
+        fs::path path(resource.url.substr(std::char_traits<char>::length(mbgl::util::MBTILES_PROTOCOL)));
+        isRelative = path.is_relative();
+        fs::path abPath = fs::absolute(path);
+        abUrl = abPath.string();
+    }
+    else if (resource.url.find("://") == std::string::npos ||
         !util::is_absolute_path(resource.url.substr(resource.url.find("://") + 3))) {
         Response response;
         response.noContent = true;
@@ -294,8 +309,23 @@ std::unique_ptr<AsyncRequest> MBTilesFileSource::request(const Resource &resourc
         return req;
     }
 
+    // if (resource.url.find("://") == std::string::npos ||
+    //     !util::is_absolute_path(resource.url.substr(resource.url.find("://") + 3))) {
+    //     Response response;
+    //     response.noContent = true;
+    //     response.error = std::make_unique<Response::Error>(Response::Error::Reason::Other,
+    //                                                        "MBTilesFileSource only supports absolute path urls");
+    //     req->actor().invoke(&FileSourceRequest::setResponse, response);
+    //     return req;
+    // }
+
     // file must exist
     auto path = url_to_path(resource.url);
+    if (isRelative)
+    {
+        path = abUrl;
+    }
+
     struct stat buffer;
     int result = stat(path.c_str(), &buffer);
     if (result == -1 && errno == ENOENT) {
