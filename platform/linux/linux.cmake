@@ -15,6 +15,14 @@ find_package(Threads REQUIRED)
 pkg_search_module(WEBP libwebp REQUIRED)
 pkg_search_module(LIBUV libuv REQUIRED)
 
+pkg_check_modules(OPENGL REQUIRED gl)
+
+pkg_check_modules(EGL REQUIRED egl)
+
+include_directories(${OPENGL_INCLUDE_DIRS} ${EGL_INCLUDE_DIRS})
+
+#target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${EGL_LIBRARIES})
+
 target_sources(
     mbgl-core
     PRIVATE
@@ -60,8 +68,9 @@ target_sources(
         ${PROJECT_SOURCE_DIR}/platform/linux/src/gl_functions.cpp
 )
 
+
 if(MLN_WITH_EGL)
-    find_package(OpenGL REQUIRED EGL)
+    #find_package(OpenGL REQUIRED EGL)
     target_sources(
         mbgl-core
         PRIVATE
@@ -70,7 +79,8 @@ if(MLN_WITH_EGL)
     target_link_libraries(
         mbgl-core
         PRIVATE
-            OpenGL::EGL
+            #OpenGL::EGL
+            ${OPENGL_LIBRARIES} ${EGL_LIBRARIES}
     )
     if (MLN_WITH_WAYLAND)
         target_compile_definitions(mbgl-core PUBLIC
