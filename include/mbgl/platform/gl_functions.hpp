@@ -549,7 +549,7 @@ extern void (*const glTexStorage2D)(GLenum, GLsizei, GLenum, GLsizei, GLsizei);
 /// Pointer to glTexStorage3D OpenGL function.
 extern void (*const glTexStorage3D)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei);
 /// Pointer to glGetInternalformativ OpenGL function.
-extern void (*const glGetInternalformativ)(GLenum, GLenum, GLenum, GLsizei, GLint*);
+///extern void (*const glGetInternalformativ)(GLenum, GLenum, GLenum, GLsizei, GLint*);
 
 #ifndef NDEBUG
 /// Check for GL errors and print on the console.

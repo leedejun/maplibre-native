@@ -277,7 +277,7 @@ void (*const glInvalidateSubFramebuffer)(GLenum, GLsizei, const GLenum*, GLint, 
     ::glInvalidateSubFramebuffer;
 void (*const glTexStorage2D)(GLenum, GLsizei, GLenum, GLsizei, GLsizei) = ::glTexStorage2D;
 void (*const glTexStorage3D)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei) = ::glTexStorage3D;
-void (*const glGetInternalformativ)(GLenum, GLenum, GLenum, GLsizei, GLint*) = ::glGetInternalformativ;
+//void (*const glGetInternalformativ)(GLenum, GLenum, GLenum, GLsizei, GLint*) = ::glGetInternalformativ;
 
 } // namespace platform
 } // namespace mbgl
