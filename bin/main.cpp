@@ -196,6 +196,41 @@ int main(int argc, char* argv[])
     }
   });
 
+  // Set a route for satellite tiles
+  svr.Get(R"(/tiles/satellite/([\d]+)/([\d]+)/([\d]+)\.png)", [](const Request &req, Response &res) {
+    // 获取请求参数
+    std::string fullPath = req.matches[0];
+    bool isPngSuffix = findSuffix(fullPath, ".png");
+    if (isPngSuffix)
+    {
+      res.set_header("Access-Control-Allow-Origin", "*");
+      res.set_header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+      res.set_header("Access-Control-Allow-Credentials", "true");
+      res.set_header("Content-Type", "image/png");
+    }
+    else
+    {
+      // Send a 404 error if the file is not found
+      res.status = 500;
+      res.set_content("This file format is not surported", "text/plain");
+      return;
+    }
+    
+    std::string filename = std::string("./data") + fullPath;
+    std::cout << " sprite filename:" << filename << std::endl;
+    std::ifstream file(filename, std::ios::binary);
+    if (file.is_open()) {
+      // Send the file content as the response body
+      res.body = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      file.close();
+      res.status = 200;
+    } else {
+      // Send a 404 error if the file is not found
+      res.status = 404;
+      res.set_content("File not found", "text/plain");
+    }
+  });
+
   // interface_basictiles basictiles;
   // svr.Get("/styles/basic", [&](const Request& req, Response& res) { basictiles(req, res); });
   // svr.Get(R"(/styles/basic/([\d]+)/([\d]+)/([\d]+)\.png)", [&](const Request& req, Response& res) { basictiles(req, res); });
