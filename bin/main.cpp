@@ -203,6 +203,9 @@ int main(int argc, char* argv[])
     bool isPngSuffix = findSuffix(fullPath, ".png");
     if (isPngSuffix)
     {
+      res.set_header("Access-Control-Allow-Origin", "*");
+      res.set_header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+      res.set_header("Access-Control-Allow-Credentials", "true");
       res.set_header("Content-Type", "image/png");
     }
     else
