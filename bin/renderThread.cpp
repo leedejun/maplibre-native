@@ -176,25 +176,19 @@ bool renderThread::isMapReady()
 
 std::string renderThread::renderMap(const std::string& styleName, double zoom, double lon, double lat)
 {
-    std::string str="";
     std::string style = styleName;
     std::future<std::string> resFuture = renderThread::instance()->Enqueue(
-    [&,this,&str]() {
+    [&,this]() {
+        std::string strPng = "";
         static util::RunLoop loop(util::RunLoop::Type::New);
         prepareMap(style);
         if (m_map && m_frontend)
         {
             m_map->jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom));
-            str = encodePNG(m_frontend->renderInLoop(*m_map, loop).image);
+            strPng = encodePNG(m_frontend->renderInLoop(*m_map, loop).image);
         }
-        return str;
+        return strPng;
     }
     );
-
-    while(str=="")
-    {
-        resFuture.wait();
-    }
-
-    return str;
+    return resFuture.get();
 }
