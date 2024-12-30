@@ -35,6 +35,9 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/bin/ut_thread_pool.cpp
     ${PROJECT_SOURCE_DIR}/bin/main.cpp
     ${PROJECT_SOURCE_DIR}/bin/renderThread.cpp
+    ${PROJECT_SOURCE_DIR}/bin/RasterTilesCustomLayerHost.cpp
+    ${PROJECT_SOURCE_DIR}/bin/dataManager.cpp
+    ${PROJECT_SOURCE_DIR}/bin/SatelliteImage.cpp
 )
 
 # target_include_directories(

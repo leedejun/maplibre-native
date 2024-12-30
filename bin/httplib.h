@@ -110,7 +110,8 @@
 
 #if defined(_MSC_VER)
 #ifdef _WIN64
-using ssize_t = __int64;
+//using ssize_t = __int64;
+#define ssize_t __int64
 #else
 using ssize_t = int;
 #endif

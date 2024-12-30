@@ -21,6 +21,13 @@ struct CustomLayerRenderParameters {
     double pitch;
     double fieldOfView;
     std::array<double, 16> projectionMatrix;
+    std::array<double, 16> viewMatrix;
+    std::array<double, 16> modelMatrix;
+    double worldSize;
+    double minLon;
+    double minLat;
+    double maxLon;
+    double maxLat;
 };
 
 class CustomLayerHost {

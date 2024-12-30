@@ -38,6 +38,7 @@ public:
 
 private:
     void prepareMap(std::string styleName);
+    std::string readJsonFile(const std::string& filePath);
 
     UTThreadPool* m_threadPool = nullptr;
     static renderThread* m_instance;

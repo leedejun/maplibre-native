@@ -2,6 +2,9 @@
 #include <mbgl/style/style.hpp>
 #include <mbgl/style/light.hpp>
 #include <iostream>
+#include "RasterTilesCustomLayerHost.hpp"
+#include <iostream>
+#include <fstream>
 
 
 renderThread* renderThread::m_instance = nullptr;
@@ -160,18 +163,43 @@ void renderThread::prepareMap(std::string styleName)
                 .withTileServerOptions(mapTilerConfiguration));
     }
     
-    //set style
-    std::string stylePath = std::string("./data/styles/")+ m_styleName + ".json";
-    if (stylePath.find("://") == std::string::npos) {
-        stylePath = std::string("file://") + stylePath;
-    }
-    m_map->getStyle().loadURL(stylePath);
+    ////set style
+    //std::string stylePath = std::string("./data/styles/")+ m_styleName + ".json";
+    //if (stylePath.find("://") == std::string::npos) {
+    //    stylePath = std::string("file://") + stylePath;
+    //}
+    //m_map->getStyle().loadURL(stylePath);
+
+    //test style
+    std::string styleJson = readJsonFile("D:\\work\\maplibre-native\\data\\style.json");
+    m_map->getStyle().loadJSON(styleJson);
+
+    //test
+    std::unique_ptr<feidu::CustomLayerHostInterface> host = nullptr;
+    host.reset(new RasterTilesCustomLayerHost());
+    m_map->addCustomLayer("testtif", std::move(host));
+
     m_mapReady.store(true);
 }
 
 bool renderThread::isMapReady()
 {
     return m_mapReady.load();
+}
+
+std::string renderThread::readJsonFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    std::stringstream buffer;
+    
+    if (file.is_open()) {
+        buffer << file.rdbuf();
+        file.close();
+    } else {
+        std::cerr << "Unable to open file: " << filePath << std::endl;
+        return "";
+    }
+
+    return buffer.str();
 }
 
 std::string renderThread::renderMap(const std::string& styleName, double zoom, double lon, double lat)

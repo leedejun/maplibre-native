@@ -183,6 +183,90 @@ void TransformState::getProjMatrix(mat4& projMatrix, uint16_t nearZ, bool aligne
     }
 }
 
+void TransformState::getMercatorMatrix(mat4& matrix) const
+{
+	if (size.isEmpty()) {
+		return;
+	}
+
+	const double cameraToCenterDistance = getCameraToCenterDistance();
+	auto offset = getCenterOffset();
+
+	// Find the distance from the viewport center point
+	// [width/2 + offset.x, height/2 + offset.y] to the top edge, to point
+	// [width/2 + offset.x, 0] in Z units, using the law of sines.
+	// 1 Z unit is equivalent to 1 horizontal px at the center of the map
+	// (the distance between[width/2, height/2] and [width/2 + 1, height/2])
+	const double fovAboveCenter = getFieldOfView() * (0.5 + offset.y / size.height);
+	const double groundAngle = M_PI / 2.0 + getPitch();
+	const double aboveCenterSurfaceDistance = std::sin(fovAboveCenter) * cameraToCenterDistance / std::sin(M_PI - groundAngle - fovAboveCenter);
+
+
+	// Calculate z distance of the farthest fragment that should be rendered.
+	const double furthestDistance = std::cos(M_PI / 2 - getPitch()) * aboveCenterSurfaceDistance + cameraToCenterDistance;
+	// Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
+	const double farZ = furthestDistance * 1.01;
+
+	const double nearZ = size.height / 50;
+
+	matrix::perspective(matrix, getFieldOfView(), double(size.width) / size.height, nearZ, farZ);
+	//matrix::perspective(matrix, getFieldOfView(), double(size.width) / size.height, 150, 2000);
+
+	// Move the center of perspective to center of specified edgeInsets.
+	// Values are in range [-1, 1] where the upper and lower range values
+	// position viewport center to the screen edges. This is overriden
+	// if using axonometric perspective (not in public API yet, Issue #11882).
+	// TODO(astojilj): Issue #11882 should take edge insets into account, too.
+	matrix[8] = -offset.x * 2.0 / size.width;
+	matrix[9] = offset.y * 2.0 / size.height;
+
+	const bool flippedY = viewportMode == ViewportMode::FlippedY;
+	matrix::scale(matrix, matrix, 1.0, flippedY ? 1 : -1, 1);
+
+	matrix::translate(matrix, matrix, 0, 0, -getCameraToCenterDistance());
+	
+
+	using NO = NorthOrientation;
+	switch (getNorthOrientation()) {
+	case NO::Rightwards: matrix::rotate_y(matrix, matrix, getPitch()); break;
+	case NO::Downwards: matrix::rotate_x(matrix, matrix, -getPitch()); break;
+	case NO::Leftwards: matrix::rotate_y(matrix, matrix, -getPitch()); break;
+	default: matrix::rotate_x(matrix, matrix, getPitch()); break;
+	}
+
+	matrix::rotate_z(matrix, matrix, getBearing() + getNorthOrientationAngle());
+
+	const double dx = pixel_x() - size.width / 2.0f, dy = pixel_y() - size.height / 2.0f;
+	matrix::translate(matrix, matrix, dx, dy, 0);
+
+	if (axonometric) {
+		// mat[11] controls perspective
+		matrix[11] = 0;
+
+		// mat[8], mat[9] control x-skew, y-skew
+		matrix[8] = xSkew;
+		matrix[9] = ySkew;
+	}
+
+	/*matrix::scale(matrix, matrix, 1, 1,
+		1.0 / Projection::getMetersPerPixelAtLatitude(getLatLng(LatLng::Unwrapped).latitude(), getZoom()));*/
+
+	// Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
+	// We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
+	// coordinates. Additionally, we adjust by half a pixel in either direction in case that viewport dimension
+	// is an odd integer to preserve rendering to the pixel grid. We're rotating this shift based on the angle
+	// of the transformation so that 0°, 90°, 180°, and 270° rasters are crisp, and adjust the shift so that
+	// it is always <= 0.5 pixels.
+	/*if (aligned) {
+		const float xShift = float(size.width % 2) / 2, yShift = float(size.height % 2) / 2;
+		const double bearingCos = std::cos(bearing), bearingSin = std::sin(bearing);
+		double devNull;
+		const float dxa = -std::modf(dx, &devNull) + bearingCos * xShift + bearingSin * yShift;
+		const float dya = -std::modf(dy, &devNull) + bearingCos * yShift + bearingSin * xShift;
+		matrix::translate(matrix, matrix, dxa > 0.5 ? dxa - 1 : dxa, dya > 0.5 ? dya - 1 : dya, 0);
+	}*/
+}
+
 void TransformState::updateCameraState() const {
     if (!valid()) {
         return;

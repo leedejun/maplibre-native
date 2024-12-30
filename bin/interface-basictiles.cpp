@@ -198,7 +198,7 @@ void interface_basictiles::operator()(const httplib::Request & req, httplib::Res
             return mbgl::Point<double>((p.x + x0) * 360 / size - 180, std::atan(std::exp(y2 * M_PI / 180)) * 360.0 / M_PI - 90.0);
         };
 
-        mbgl::Point<int16_t> tileCoord = mbgl::Point<int16_t>(mbgl::util::EXTENT*0.5, mbgl::util::EXTENT*0.5);
+        mbgl::Point<int16_t> tileCoord = mbgl::Point<int16_t>(int16_t(mbgl::util::EXTENT*0.5), int16_t(mbgl::util::EXTENT*0.5));
         mbgl::Point<double> result = tileCoordinatesToLatLng(tileCoord);
         return result;
     };

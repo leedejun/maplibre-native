@@ -9,6 +9,7 @@
 #include <mbgl/util/mat4.hpp>
 #include <mbgl/util/projection.hpp>
 #include <mbgl/util/size.hpp>
+#include <mbgl/map/mercator_coordinate.h>
 
 #include <cstdint>
 #include <array>
@@ -113,6 +114,10 @@ public:
     // Matrix
     void matrixFor(mat4&, const UnwrappedTileID&) const;
     void getProjMatrix(mat4& matrix, uint16_t nearZ = 1, bool aligned = false) const;
+
+    // The mercatorMatrix can be used to transform points from mercator coordinates
+	// ([0, 0] nw, [1, 1] se) to GL coordinates.
+	void getMercatorMatrix(mat4& matrix) const;
 
     // Dimensions
     Size getSize() const;

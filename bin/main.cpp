@@ -1,5 +1,6 @@
 #include <args.hxx>
-#include <unistd.h>
+//#include <unistd.h>
+#include "unistd.h"
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -9,6 +10,22 @@
 #include "interface-basictiles.hpp"
 #include "renderThread.hpp"
 #include <args.hxx>
+
+//////////////////////////////////
+//test
+#include <mbgl/map/map.hpp>
+#include <mbgl/map/map_options.hpp>
+#include <mbgl/util/image.hpp>
+#include <mbgl/util/run_loop.hpp>
+
+#include <mbgl/gfx/backend.hpp>
+#include <mbgl/gfx/headless_frontend.hpp>
+#include <mbgl/style/style.hpp>
+
+#include "dataManager.h"
+#include "RasterTilesCustomLayerHost.hpp"
+//////////////////////////////////
+
 
 using namespace std;
 using namespace httplib;
@@ -54,7 +71,6 @@ bool findSuffix(const std::string& src, const std::string& suffix)
 
 int main(int argc, char* argv[])
 {
-
   // 创建一个 ArgumentParser 对象
     args::ArgumentParser parser("This is a test program.", "This goes after the options.");
     // 创建一个 Group 对象
@@ -216,8 +232,8 @@ int main(int argc, char* argv[])
       return;
     }
     
-    std::string filename = std::string("./data") + fullPath;
-    std::cout << " sprite filename:" << filename << std::endl;
+    std::string filename = std::string("D:\\work\\maplibre-native\\data") + fullPath;
+    std::cout << " satellite filename:" << filename << std::endl;
     std::ifstream file(filename, std::ios::binary);
     if (file.is_open()) {
       // Send the file content as the response body
@@ -250,3 +266,144 @@ int main(int argc, char* argv[])
         }
   return 1;
 }
+
+std::string readJsonFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    std::stringstream buffer;
+    
+    if (file.is_open()) {
+        buffer << file.rdbuf();
+        file.close();
+    } else {
+        std::cerr << "Unable to open file: " << filePath << std::endl;
+        return "";
+    }
+
+    return buffer.str();
+}
+
+//int main(int argc, char* argv[]) {
+//    args::ArgumentParser argumentParser("MapLibre Native render tool");
+//    args::HelpFlag helpFlag(argumentParser, "help", "Display this help menu", {"help"});
+//
+//    args::ValueFlag<std::string> backendValue(argumentParser, "Backend", "Rendering backend", {"backend"});
+//    args::ValueFlag<std::string> apikeyValue(argumentParser, "key", "API key", {'t', "apikey"});
+//    args::ValueFlag<std::string> styleValue(argumentParser, "URL", "Map stylesheet", {'s', "style"});
+//    args::ValueFlag<std::string> outputValue(argumentParser, "file", "Output file name", {'o', "output"});
+//    args::ValueFlag<std::string> cacheValue(argumentParser, "file", "Cache database file name", {'c', "cache"});
+//    args::ValueFlag<std::string> assetsValue(
+//        argumentParser, "file", "Directory to which asset:// URLs will resolve", {'a', "assets"});
+//
+//    args::Flag debugFlag(argumentParser, "debug", "Debug mode", {"debug"});
+//
+//    args::ValueFlag<double> pixelRatioValue(argumentParser, "number", "Image scale factor", {'r', "ratio"});
+//
+//    args::ValueFlag<double> zoomValue(argumentParser, "number", "Zoom level", {'z', "zoom"});
+//
+//    args::ValueFlag<double> lonValue(argumentParser, "degrees", "Longitude", {'x', "lon"});
+//    args::ValueFlag<double> latValue(argumentParser, "degrees", "Latitude", {'y', "lat"});
+//    args::ValueFlag<double> bearingValue(argumentParser, "degrees", "Bearing", {'b', "bearing"});
+//    args::ValueFlag<double> pitchValue(argumentParser, "degrees", "Pitch", {'p', "pitch"});
+//    args::ValueFlag<uint32_t> widthValue(argumentParser, "pixels", "Image width", {'w', "width"});
+//    args::ValueFlag<uint32_t> heightValue(argumentParser, "pixels", "Image height", {'h', "height"});
+//
+//    try {
+//        argumentParser.ParseCLI(argc, argv);
+//    } catch (const args::Help&) {
+//        std::cout << argumentParser;
+//        exit(0);
+//    } catch (const args::ParseError& e) {
+//        std::cerr << e.what() << std::endl;
+//        std::cerr << argumentParser;
+//        exit(1);
+//    } catch (const args::ValidationError& e) {
+//        std::cerr << e.what() << std::endl;
+//        std::cerr << argumentParser;
+//        exit(2);
+//    }
+//
+//    /*const double lat = latValue ? args::get(latValue) : 0;
+//    const double lon = lonValue ? args::get(lonValue) : 0;
+//    const double zoom = zoomValue ? args::get(zoomValue) : 0;*/
+//
+//    //96.4899729729999933,40.3233243239999979 : 97.0100270270000067,40.6766756760000021
+//    const double lat = (40.3233243239999979+40.6766756760000021)*0.5;
+//    const double lon = (96.4899729729999933+97.0100270270000067)*0.5;
+//    const double zoom = 3;
+//    const double bearing = bearingValue ? args::get(bearingValue) : 0;
+//    const double pitch = pitchValue ? args::get(pitchValue) : 0;
+//    const double pixelRatio = pixelRatioValue ? args::get(pixelRatioValue) : 1;
+//
+//    const uint32_t width = widthValue ? args::get(widthValue) : 512;
+//    const uint32_t height = heightValue ? args::get(heightValue) : 512;
+//    const std::string output = outputValue ? args::get(outputValue) : "out.png";
+//    const std::string cache_file = cacheValue ? args::get(cacheValue) : "cache.sqlite";
+//    const std::string asset_root = assetsValue ? args::get(assetsValue) : ".";
+//
+//    // Try to load the apikey from the environment.
+//    const char* apikeyEnv = getenv("MLN_API_KEY");
+//    const std::string apikey = apikeyValue ? args::get(apikeyValue) : (apikeyEnv ? apikeyEnv : std::string());
+//
+//    const bool debug = debugFlag ? args::get(debugFlag) : false;
+//
+//    using namespace mbgl;
+//
+//    auto mapTilerConfiguration = mbgl::TileServerOptions::MapTilerConfiguration();
+//    std::string style = styleValue ? args::get(styleValue) : mapTilerConfiguration.defaultStyles().at(0).getUrl();
+//
+//    util::RunLoop loop;
+//
+//    HeadlessFrontend frontend({width, height}, static_cast<float>(pixelRatio));
+//    Map map(frontend,
+//            MapObserver::nullObserver(),
+//            MapOptions()
+//                .withMapMode(MapMode::Static)
+//                .withSize(frontend.getSize())
+//                .withPixelRatio(static_cast<float>(pixelRatio)),
+//            ResourceOptions()
+//                .withCachePath(cache_file)
+//                .withAssetPath(asset_root)
+//                .withApiKey(apikey)
+//                .withTileServerOptions(mapTilerConfiguration));
+//
+//
+//    //test style
+//    style = std::string("D:\\work\\maplibre-native\\data\\style.json");
+//
+//    if (style.find("://") == std::string::npos) {
+//        style = std::string("file://") + style;
+//    }
+//
+//    //map.getStyle().loadURL(style);
+//    std::string styleJson = readJsonFile("D:\\work\\maplibre-native\\data\\style.json");
+//    map.getStyle().loadJSON(styleJson);
+//
+//    //test
+//    std::unique_ptr<feidu::CustomLayerHostInterface> host = nullptr;
+//    host.reset(new RasterTilesCustomLayerHost());
+//    map.addCustomLayer("testtif", std::move(host));
+//
+//    map.jumpTo(CameraOptions().withCenter(LatLng{lat, lon}).withZoom(zoom).withBearing(bearing).withPitch(pitch));
+//
+//    if (debug) {
+//        map.setDebug(debug ? mbgl::MapDebugOptions::TileBorders | mbgl::MapDebugOptions::ParseStatus
+//                           : mbgl::MapDebugOptions::NoDebug);
+//    }
+//
+//    try {
+//        std::ofstream out(output, std::ios::binary);
+//        out << encodePNG(frontend.render(map).image);
+//        out.close();
+//
+//        ////test
+//        //dataManager* dataMgr = new dataManager();
+//        //std::string filePath = "D:\\workDoc\\lidejun\\data\\testdata\\RD0100_DataCloud_K47D011002_2024H1_4FF_4326.tif";
+//        //dataMgr->LoadGeoTIFFAsTexture(filePath.c_str());
+//
+//    } catch (std::exception& e) {
+//        std::cout << "Error: " << e.what() << std::endl;
+//        exit(1);
+//    }
+//
+//    return 0;
+//}

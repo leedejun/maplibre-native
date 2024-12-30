@@ -86,6 +86,33 @@ public:
                       wrapMode};
     }
 
+    //from mercator_coordinate.js of mapbox_gl_js
+	static double mercatorXfromLng(double lng) {
+		return (180.0 + lng) / 360.0;
+	}
+
+	static double mercatorYfromLat(double lat) {
+		return (180.0 - (180.0 / M_PI * std::log(std::tan(M_PI / 4.0 + lat * M_PI / 360.0)))) / 360.0;
+	}
+
+	static Point<double> mercatorXYFromLatLng(const LatLng& latLng)
+	{
+		return Point<double>{mercatorXfromLng(latLng.longitude()), 
+			mercatorYfromLat(latLng.latitude())};
+	}
+
+    /*
+	* The circumference of the world in meters at the given latitude.
+	*/
+	static double circumferenceAtLatitude(double latitude) {
+		double circumferenceAtEquator = 2 * M_PI * util::EARTH_RADIUS_M;
+		return circumferenceAtEquator * std::cos(latitude * M_PI / 180);
+	}
+
+	static double mercatorZfromAltitude(double altitude, double lat) {
+		return altitude / circumferenceAtLatitude(lat);
+	}
+
 private:
     static Point<double> project_(const LatLng& latLng, double worldSize) {
         const double latitude = util::clamp(latLng.latitude(), -util::LATITUDE_MAX, util::LATITUDE_MAX);

@@ -20,6 +20,7 @@
 #include <vector>
 #include <memory>
 #include <optional>
+#include "../../../bin/ftmap.hpp"
 
 namespace mbgl {
 
@@ -151,6 +152,11 @@ public:
     /// has zero length.
     void setFreeCameraOptions(const FreeCameraOptions& camera);
     FreeCameraOptions getFreeCameraOptions() const;
+
+    //add custom layer
+    void addCustomLayer(const std::string &id,
+        std::unique_ptr<feidu::CustomLayerHostInterface>& host,
+        const std::string& before = std::string());
 
 protected:
     class Impl;

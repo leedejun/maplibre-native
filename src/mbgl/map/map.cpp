@@ -20,9 +20,11 @@
 #include <mbgl/util/mapbox.hpp>
 #include <mbgl/util/math.hpp>
 #include <mbgl/util/tile_coordinate.hpp>
+#include <mbgl/util/optional.hpp>
 
 #include <utility>
 #include <iostream>
+#include <mbgl/style/layers/custom_layer.hpp>
 
 namespace mbgl {
 
@@ -529,5 +531,59 @@ void Map::setFreeCameraOptions(const FreeCameraOptions& camera) {
 FreeCameraOptions Map::getFreeCameraOptions() const {
     return impl->transform.getFreeCameraOptions();
 }
+
+void Map::addCustomLayer(const std::string &id,
+        std::unique_ptr<feidu::CustomLayerHostInterface>& host,
+        const std::string& before){
+class HostWrapper : public mbgl::style::CustomLayerHost {
+        public:
+        std::unique_ptr<feidu::CustomLayerHostInterface> ptr;
+        HostWrapper(std::unique_ptr<feidu::CustomLayerHostInterface>& p)
+         {
+            ptr = std::move(p);
+         }
+
+        void initialize() {
+            ptr->initialize();
+        }
+
+        void render(const mbgl::style::CustomLayerRenderParameters& params) {
+            feidu::CustomLayerRenderParameters renderParams;
+            renderParams.width = params.width;
+            renderParams.height = params.height;
+            renderParams.latitude = params.latitude;
+            renderParams.longitude = params.longitude;
+            renderParams.zoom = params.zoom;
+            renderParams.bearing = params.bearing;
+            renderParams.pitch = params.pitch;
+            renderParams.fieldOfView = params.fieldOfView;
+			renderParams.projectionMatrix = params.projectionMatrix;
+			renderParams.viewMatrix = params.viewMatrix;
+			renderParams.modelMatrix = params.modelMatrix;
+			renderParams.worldSize = params.worldSize;
+			
+
+			renderParams.minLon = params.minLon;
+			renderParams.minLat = params.minLat;
+			renderParams.maxLon = params.maxLon;
+			renderParams.maxLat = params.maxLat;
+
+            ptr->render(renderParams);
+        }
+
+        void contextLost() { }
+
+        void deinitialize() {
+            ptr->deinitialize();
+        }
+    };
+
+    impl->style->addLayer(std::make_unique<mbgl::style::CustomLayer>(
+            id,
+            std::make_unique<HostWrapper>(host)),
+            before.empty() ? std::make_optional<std::string>() : std::make_optional(before));
+
+}
+
 
 } // namespace mbgl
